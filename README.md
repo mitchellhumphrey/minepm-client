@@ -1,0 +1,1 @@
+A command line client for minepm, a minecraft mod package manager tool.
