@@ -39,27 +39,21 @@ module.exports = function () {
                 else {
                     console.log("minepm.json file already created")
                     fs.readFile(local_path + '/minepm.json', (err, data)=>{
-                        output = JSON.parse(data)
-                        callback(output);
+                        
+                        callback(JSON.parse(data));
                     })
-                }
-                
-                
+                }  
             })
-
-
-            
-            
-            
-
         })
     }
-    /* 
-    const fs = require('fs');
-    this.init = function (path) {
-        fs.access(path + "/")
-    }
-    
-    */
 
+    this.replaceMinePM = function (minePMObject, local_path){
+        fs.writeFile(`${local_path}/minepm.json`, JSON.stringify(minePMObject), (err)=>{
+            console.log("WROTE TO FILE minepm.json")
+            if (err) {
+                console.log(error);
+                return;
+            }
+        })
+    }
 }

@@ -26,6 +26,7 @@ if (anyargs){
         initMinePM(args[3], (minepmObject)=>{
             installMod(args[1], args[2], FILEHOST_URL, args[3], minepmObject, (minepmObject)=>{
                 console.log(minepmObject)
+                replaceMinePM(minepmObject, args[3]);
             });
         })
         

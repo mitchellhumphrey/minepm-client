@@ -45,16 +45,13 @@ module.exports = function() {
                         file.close(callback); //calls the callback function once file is completed downloading
                     });
                 }).on("error", (err)=>{
-                    fs.unlink(name);
+                    fs.unlink(name, (err)=>{
+                        console.log(err);
+                    });
                     console.log(err);
                 })
             })
-        })
-    
-        
-    
-        
-        
+        })        
     }
     
     this.installInfo = function (modname, version,host_URL, local_path, callback){
@@ -71,37 +68,69 @@ module.exports = function() {
             }
             
         })
+        let exists = minepmObject.mods.find((obj) =>{
+            return (obj.modname === modname && obj.version === version)
+        })
 
+        if (exists){
+            console.log("MOD ALREADY INSTALLED")
+            callback(minepmObject);
+            return;
+        }
         console.log(`attempting to install ${modname} version ${version}`)
         var info;
 
         installInfo(modname, version, host_URL, local_path, ()=>{
-            fs.readFile(`${local_path}/${modname}/${version}/info.json`, (err, data)=>{
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                info = JSON.parse(data);
-                downloadFile(modname,version, `mod.zip`,`${host_URL}/${modname}/${version}/mod.zip`, local_path,()=>{
-                    let zip = new AdmZip(`${local_path}/${modname}/${version}/mod.zip`);
-                    zip.extractAllTo(`${local_path}/${modname}/${version}`);
 
-                    function PUSH (callback){
-                        minepmObject.mods.push(info)
-                        callback();
-                    }
+            const data = fs.readFileSync(`${local_path}/${modname}/${version}/info.json`)
+            info = JSON.parse(data);
 
-                    PUSH(()=>{
-                        let index = 0;
-                        while (index < info.dependancies.length){
-                            installMod(info.dependancies[index].name,info.dependancies[index].version, host_URL, local_path, minepmObject, ()=>{})
-                            index++;
-                        }
+            downloadFile(modname,version, `mod.zip`,`${host_URL}/${modname}/${version}/mod.zip`, local_path,()=>{
+                let zip = new AdmZip(`${local_path}/${modname}/${version}/mod.zip`);
+                zip.extractAllTo(`${local_path}/${modname}/${version}`);
+
+                minepmObject.mods.push(info)
+                for (var x of info.dependencies){
+                    installMod(x.name,x.version, host_URL, local_path, minepmObject, (newminepmObject)=>{
+                        Object.assign(minepmObject, newminepmObject);
                     })
+                }
+                delete info.dependencies
+                callback(minepmObject);
 
-                    callback(minepmObject);
-                })
+                
             })
+
+
+
+
+
+
+            // fs.readFile(`${local_path}/${modname}/${version}/info.json`, (err, data)=>{
+            //     if (err) {
+            //         console.log(err);
+            //         return;
+            //     }
+            //     info = JSON.parse(data);
+            //     downloadFile(modname,version, `mod.zip`,`${host_URL}/${modname}/${version}/mod.zip`, local_path,()=>{
+            //         let zip = new AdmZip(`${local_path}/${modname}/${version}/mod.zip`);
+            //         zip.extractAllTo(`${local_path}/${modname}/${version}`);
+
+                    
+            //         minepmObject.mods.push(info)
+            //         for (var x of info.dependencies){
+            //             installMod(x.name,x.version, host_URL, local_path, minepmObject, (newminepmObject)=>{
+            //                 //console.log("recursive console.log" + x.name)
+            //                 //minepmObject = newminepmObject;
+            //                 Object.assign(minepmObject, newminepmObject);
+            //             })
+            //         }
+            //         delete info.dependencies
+            //         callback(minepmObject);
+
+                    
+                // })
+            // })
         });   
     }
 }
